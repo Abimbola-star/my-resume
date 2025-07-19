@@ -30,6 +30,16 @@ jobs:
       - name: logging to ecr
         uses: aws-actions/amazon-ecr-login@v1
         id: ecr-login
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"  # Scans filesystem (repo)
+          format: "table"  # Output format (table, json, sarif)
+          exit-code: "0"   # Fails if vulnerabilities found
+          severity: "CRITICAL,HIGH"  # Only fail on critical/high
+          ignore-unfixed: true  # Ignore unfixed vulnerabilities
+
       - name: Build and tag image
         id: build-and-push
         run: |
@@ -42,6 +52,7 @@ jobs:
           format: "table"
           exit-code: "0"
           severity: "CRITICAL,HIGH"
+          
       - name: Push image to ecr
         run: |
           docker push ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPO_NAME}}:${{ env.IMAGE_TAG }}
